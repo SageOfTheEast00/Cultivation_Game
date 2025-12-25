@@ -32,5 +32,5 @@ export default defineConfig({
       },
     },
   },
-  base: '/Cultivation-Game/',
+  base: '/Cultivation_Game/',
 })
