@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from './stores/gameStore'
+import OptionsScreen from './components/OptionsScreen.vue'
 
 const currentPage = ref('Main')
 
@@ -13,21 +14,26 @@ onMounted(() => {
 onUnmounted(() => {
   gameStore.stopGameLoop()
 })
+
+const navPages = [
+  { id: 'Main', label: 'Main' },
+  { id: 'Cultivation', label: 'Cultivation' },
+  { id: 'Options', label: 'Options' },
+  { id: 'Profile', label: 'Profile' },
+  { id: 'About', label: 'About' },
+]
 </script>
 
 <template>
   <div class="app-container">
     <!-- Navigation Bar -->
-    <NavBar
-      :pages="['Main', 'Cultivation', 'Options', 'Profile', 'About']"
-      v-model:activePage="currentPage"
-    />
+    <NavBar :pages="navPages" v-model:activePage="currentPage" />
     <!-- Main Content -->
     <MainScreen v-if="currentPage === 'Main'" />
     <!-- Cultivation Screen -->
     <CultivationScreen v-else-if="currentPage === 'Cultivation'" />
     <!-- Options Screen -->
-    <GameOptions v-else-if="currentPage === 'Options'" />
+    <OptionsScreen v-else-if="currentPage === 'Options'" />
   </div>
 </template>
 

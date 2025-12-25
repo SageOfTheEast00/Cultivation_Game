@@ -9,11 +9,11 @@
       <ul>
         <li
           v-for="page in pages"
-          :key="page"
-          :class="{ active: activePage === page }"
-          @click="selectPage(page)"
+          :key="page.id"
+          :class="{ active: activePage === page.id }"
+          @click="selectPage(page.id)"
         >
-          {{ page }}
+          {{ page.label }}
         </li>
       </ul>
     </nav>

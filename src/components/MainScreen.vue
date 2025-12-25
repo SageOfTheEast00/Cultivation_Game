@@ -22,12 +22,11 @@
       </div>
     </div>
     <div class="right-panel">
-      <!-- TODO: Fix page title-->
-      <NavBar :pages="['Log', StoryPageTitle]" v-model:activePage="currentPage" :showDate="false" />
-      <StoryPanel v-if="currentPage === StoryPageTitle" />
+      <NavBar :pages="rightNavPages" v-model:activePage="currentPage" :showDate="false" />
+      <StoryPanel v-if="currentPage === 'Story'" />
       <div class="Log" v-if="currentPage === 'Log'">
         <!-- Debugging Stuff -->
-        <h2>storyHistory {{ gameStore.state.game.storyHistory }}</h2>
+        <h2>right nav pages {{ rightNavPages }}</h2>
       </div>
     </div>
   </div>
@@ -48,9 +47,14 @@ const unReadStories = computed(() => {
   return gameStore.state.game.storyHistory.filter((entry) => !entry.read).length
 })
 
-const StoryPageTitle = computed(() => {
-  return unReadStories.value > 0 ? `Story (${unReadStories.value})` : 'Story'
-})
+const StoryPageTitle = computed(() =>
+  unReadStories.value > 0 ? `Story (${unReadStories.value})` : 'Story',
+)
+
+const rightNavPages = computed(() => [
+  { id: 'Log', label: 'Log' },
+  { id: 'Story', label: StoryPageTitle.value },
+])
 
 const visibleActions = computed(() => {
   return gameStore.getVisibleActions('main', gameStore.state.player.location)
