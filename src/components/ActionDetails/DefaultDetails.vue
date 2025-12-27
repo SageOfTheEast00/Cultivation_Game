@@ -1,7 +1,7 @@
 <template>
   <div class="action-details">
     <p>
-      Progress: {{ action.current_progress }} / {{ action.progress_required }} ({{ timeToComplete }}
+      Progress: {{ action.currentProgress }} / {{ action.progressRequired }} ({{ timeToComplete }}
       ticks)
     </p>
   </div>
@@ -21,7 +21,7 @@ const props = defineProps({
 //const gameStore = useGameStore()
 const timeToComplete = computed(() => {
   const action = props.action
-  const remaining_progress = action.progress_required - action.current_progress
+  const remaining_progress = action.progressRequired - action.currentProgress
   const time_to_complete = Math.ceil(remaining_progress / 20) // for now
   return time_to_complete
 })

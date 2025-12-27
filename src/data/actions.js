@@ -36,7 +36,7 @@ export const ActionDefinitions = {
       }
       if (old < 100 && current >= 100) {
         helpers.addStoryEntry(gameState, 'read_golden_book_1')
-        gameState.actions['first_true_breath'].is_visible = true
+        gameState.actions['study_sifting_sand_to_see_the_nature'].is_visible = true
       }
     },
     onComplete: () => {},
@@ -63,14 +63,24 @@ export const ActionDefinitions = {
     title: 'Study Sifting Sand to See the Nature',
     flavor: 'Attempt to harness the power of true breath.',
     area: 'cave',
-    base_progress_required: 5000,
+    base_progress_required: 50,
+    is_continuous: true,
+    one_time: true,
+    visible_by_default: true, // For testing purposes remove later
     onProgress: ({ gameState, current, old, helpers }) => {
       if (old == 0 && current >= 1) {
         helpers.addStoryEntry(gameState, 'study_sifting_sand_to_see_the_nature_start')
       }
     },
     onComplete: (gameState, helpers) => {
-      helpers.addStoryEntry(gameState, 'first_true_breath_1')
+      helpers.addManualToKnowledge({
+        gameState,
+        manualId: 'sifting_sand_to_see_the_nature',
+        manualData: {
+          // Additional specific data for this manual can go here
+        },
+      })
+      helpers.addStoryEntry(gameState, 'study_sifting_sand_to_see_the_nature_complete')
     },
   },
 }

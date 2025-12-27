@@ -6,12 +6,35 @@ defineProps({
   action: {
     type: Object,
     required: true,
+    validator: (value) => {
+      const missingKeys = []
+      if (!('id' in value)) missingKeys.push('id')
+      if (!('title' in value)) missingKeys.push('title')
+      if (!('currentProgress' in value)) missingKeys.push('currentProgress')
+      if (!('progressRequired' in value)) missingKeys.push('progressRequired')
+      if (missingKeys.length > 0) {
+        console.warn(`Action is missing required keys: ${missingKeys.join(', ')}`)
+        return false
+      }
+      return true
+    },
   },
   isActive: {
     type: Boolean,
     required: false,
+    default: false,
   },
-  expandButton: {
+  showExpandButton: {
+    type: Boolean,
+    required: false,
+    default: true,
+  },
+  showProgressBar: {
+    type: Boolean,
+    required: false,
+    default: true,
+  },
+  showMasteryBar: {
     type: Boolean,
     required: false,
     default: true,
@@ -27,7 +50,7 @@ const transitionSpeed = computed(() => {
   return `width ${tickRate}ms linear`
 })
 const barWidth = (action) => {
-  return (action.current_progress / action.progress_required) * 100
+  return (action.currentProgress / action.progressRequired) * 100
 }
 
 const isExpanded = ref(false)
@@ -38,18 +61,18 @@ const toggleExpand = () => {
 </script>
 
 <template>
-  <div class="card" @click="$emit('cardClick')" :class="{ active: isActive }">
+  <div class="card" :class="{ active: isActive }">
     <div class="card-header">
       <div class="title-container">
         <h2 class="card-title">{{ action.title }}</h2>
         <!-- Add 2 progress bars -->
-        <div class="bar-container">
+        <div class="bar-container" v-if="showProgressBar">
           <div
             class="bar-fill action-fill"
             :style="{ width: barWidth(action) + '%', transition: transitionSpeed }"
           ></div>
         </div>
-        <div class="bar-container mastery-container">
+        <div class="bar-container mastery-container" v-if="showMasteryBar">
           <div class="bar-fill mastery-fill" :style="{ width: 40 + '%' }"></div>
         </div>
       </div>
@@ -58,7 +81,7 @@ const toggleExpand = () => {
         class="expand-button"
         @click.stop="toggleExpand"
         :class="{ rotated: isExpanded }"
-        v-if="expandButton"
+        v-if="showExpandButton"
       >
         <!-- Icon for button dont worry about it-->
         <svg

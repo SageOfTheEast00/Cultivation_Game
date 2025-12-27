@@ -26,7 +26,7 @@
       <StoryPanel v-if="currentPage === 'Story'" />
       <div class="Log" v-if="currentPage === 'Log'">
         <!-- Debugging Stuff -->
-        <h2>right nav pages {{ rightNavPages }}</h2>
+        <h2>active actions {{ gameStore.state.game.activeActions }}</h2>
       </div>
     </div>
   </div>
@@ -57,8 +57,9 @@ const rightNavPages = computed(() => [
 ])
 
 const visibleActions = computed(() => {
-  return gameStore.getVisibleActions('main', gameStore.state.player.location)
+  return gameStore.getVisibleActions(gameStore.state.player.location)
 })
+
 const masonryColumns = computed(() => {
   const leftActions = []
   const rightActions = []
