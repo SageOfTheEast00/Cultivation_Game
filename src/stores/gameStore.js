@@ -16,12 +16,95 @@ const state = ref({
   game: {
     date: { day: 0, year: 1000 },
     activeActions: [],
+    visibleActions: ['wake_up', 'study_sifting_sand_to_see_the_nature'],
     storyHistory: [],
-    selectedManual: null,
+    selectedManualId: null,
   },
 })
 
-// New Action Getter
+// Helpers for action processing
+
+const resetIfNotContinuous = (actionData) => {
+  if (!actionData) return
+  const { def: actionDef, state: actionState, type: actionType } = actionData
+  if (!actionDef.is_continuous && actionType !== 'cultivation') {
+    actionState.currentProgress = 0
+  }
+}
+
+const handleOneTimeActions = (actionId, actionState) => {
+  const { activeActions } = state.value.game
+  const removeIndex = activeActions.indexOf(actionId)
+  if (removeIndex > -1) {
+    activeActions.splice(removeIndex, 1)
+  }
+  helpers.hideAction(state.value, actionId)
+  actionState.currentProgress = 0
+}
+
+const getActionById = (actionId) => {
+  if (actionId === null || actionId === undefined) return null
+  if (ActionDefinitions[actionId]) {
+    return {
+      type: 'normal',
+      def: ActionDefinitions[actionId],
+      state: state.value.actions[actionId],
+    }
+  }
+
+  if (cultivationActions[actionId]) {
+    return {
+      type: 'cultivation',
+      def: cultivationActions[actionId],
+      state: state.value.player.knowledge.manuals[actionId],
+    }
+  }
+  console.warn('Action not found for id:', actionId)
+  return null
+}
+
+// eslint-disable-next-line no-unused-vars
+const calculateProgressGain = (actionDef, actionState) => {
+  // Placeholder logic for progress gain calculation
+  return 2 // Fixed progress gain for now
+}
+
+// Process one acton
+const processActionTick = (actionId) => {
+  const actionData = getActionById(actionId)
+  if (!actionData) return
+
+  // eslint-disable-next-line no-unused-vars
+  const { def: actionDef, state: actionState, type: actionType } = actionData
+
+  const oldProgress = actionState.currentProgress
+  const progressGain = calculateProgressGain(actionDef, actionState)
+  actionState.currentProgress += progressGain
+
+  // --- onProgress hook ---
+  if (actionDef.onProgress) {
+    actionDef.onProgress({
+      helpers: helpers,
+      current: actionState.currentProgress,
+      old: oldProgress,
+      gameState: state.value,
+    })
+  }
+
+  // completion check
+  while (actionState.currentProgress >= actionState.progressRequired) {
+    if (actionDef.onComplete) {
+      actionDef.onComplete(state.value, helpers)
+    }
+
+    // if one-time action, remove from active actions and hide
+    if (actionDef.one_time) {
+      handleOneTimeActions(actionId, actionState)
+      break
+    }
+    actionState.currentProgress -= actionState.progressRequired
+  }
+}
 
 // Populate actions from definitions
 
@@ -30,10 +113,8 @@ for (const id in ActionDefinitions) {
   if (!state.value.actions[id]) {
     state.value.actions[id] = {
       id: id,
-      is_visible: actionDef.visible_by_default || false,
       currentProgress: 0,
       progressRequired: actionDef.base_progress_required || 0,
-      is_continuous: actionDef.is_continuous || false,
     }
   }
 }
@@ -56,8 +137,6 @@ const handleDateProgression = () => {
 export const useGameStore = defineStore(
   'game',
   () => {
-    // initialize state
-
     let loopId = null
 
     // --- Game Tick Start ---
@@ -68,51 +147,10 @@ export const useGameStore = defineStore(
       handleDateProgression()
 
       activeIds.forEach((actionId) => {
-        const actionDef = ActionDefinitions[actionId]
-        const actionState = state.value.actions[actionId]
-
-        if (!actionDef || !actionState) return
-
-        // TODO:make a more sophisticated progress increment later
-        const oldProgress = actionState.currentProgress
-        actionState.currentProgress += 2
-
-        // --- onProgress hook ---
-        if (actionDef.onProgress) {
-          actionDef.onProgress({
-            helpers: helpers,
-            current: actionState.currentProgress,
-            old: oldProgress,
-            gameState: state.value,
-          })
-        }
-
-        // completion check
-        while (actionState.currentProgress >= actionState.progressRequired) {
-          if (actionDef.onComplete) {
-            actionDef.onComplete(state.value, helpers)
-          }
-
-          // if one-time action, remove from active actions and hide
-          if (actionDef.one_time) {
-            console.log('Handling one-time action completion for:', actionId)
-            handleOneTimeActions(actionId, actionState)
-            break
-          }
-          actionState.currentProgress -= actionState.progressRequired
-        }
+        processActionTick(actionId)
       })
     }
 
-    const handleOneTimeActions = (actionId, actionState) => {
-      const { activeActions } = state.value.game
-      const removeIndex = activeActions.indexOf(actionId)
-      if (removeIndex > -1) {
-        activeActions.splice(removeIndex, 1)
-      }
-      actionState.is_visible = false
-      actionState.currentProgress = 0
-    }
     // --- Game Tick End ---
 
     const startGameLoop = () => {
@@ -129,46 +167,47 @@ export const useGameStore = defineStore(
     }
 
     // Active Actions Management
-    const handleActiveAction = (clickedAction, type = 'normal') => {
-      const actionId = clickedAction.id
+    const handleActiveAction = (clickedActionId) => {
       const activeActions = state.value.game.activeActions
-      const actionState = state.value.actions[actionId]
+      const actionData = getActionById(clickedActionId)
+      if (!actionData) return
 
-      const index = activeActions.indexOf(actionId) //find index of action in active actions
+      const index = activeActions.indexOf(clickedActionId) //find index of action in active actions
 
       if (index > -1) {
         // Action is already active, so remove it
         activeActions.splice(index, 1)
-        if (!actionState.is_continuous) {
-          actionState.currentProgress = 0 // reset progress if not continuous
-        }
+        resetIfNotContinuous(actionData)
       } else {
-        if (type === 'cultivation') {
+        if (actionData.type === 'cultivation') {
           // For cultivation actions, clear all other active actions
+          activeActions.forEach((activeId) => {
+            const activeActionData = getActionById(activeId)
+            resetIfNotContinuous(activeActionData)
+          })
           activeActions.length = 0
         }
-        activeActions.push(actionId)
+        activeActions.push(clickedActionId)
         const { maxActiveActions } = state.value.player.upgrades
         if (activeActions.length > maxActiveActions) {
-          const removeId = activeActions.shift()
-          const removeActionState = state.value.actions[removeId]
-          if (!removeActionState.is_continuous) {
-            removeActionState.currentProgress = 0 // reset progress if not continuous
-          }
+          const removedId = activeActions.shift()
+          const removedActionData = getActionById(removedId)
+          resetIfNotContinuous(removedActionData)
         }
       }
     }
 
     const getVisibleActions = computed(() => {
       return (area) => {
-        return Object.values(state.value.actions)
-          .filter((action) => action.is_visible)
-          .filter((action) => (area ? ActionDefinitions[action.id].area === area : true))
+        return state.value.game.visibleActions
+          .map((id) => getActionById(id))
+          .filter((action) => action !== null) // Filter out null actions
+          .filter((action) => !area || action.def.area === area) // Filter by area if provideds
           .map((action) => {
-            const staticDef = ActionDefinitions[action.id]
             return {
-              ...staticDef,
-              ...action,
+              ...action.def,
+              ...action.state,
+              type: action.type,
             }
           })
       }
@@ -189,6 +228,7 @@ export const useGameStore = defineStore(
       state,
       getVisibleActions,
       getAvailableManuals,
+      getActionById,
       handleActiveAction,
       startGameLoop,
       stopGameLoop,

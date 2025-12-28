@@ -5,6 +5,8 @@
     </div>
     <div class="cultivation-page">
       <h1>Cultivation Page</h1>
+      <p>selected manual: {{ selectedManual }}</p>
+      <p>active: {{ gameStore.state.game.activeActions }}</p>
       <div class="button-container">
         <div class="cultivation-progress-bar"></div>
         <ActionCard
@@ -12,7 +14,7 @@
           :action="selectedManual"
           :key="selectedManual.id"
           :show-expand-button="false"
-          @click="gameStore.handleActiveAction(selectedManual, 'cultivation')"
+          @click="gameStore.handleActiveAction(selectedManual.id)"
         />
       </div>
     </div>
@@ -23,7 +25,7 @@
         :key="manual.id"
         :action="manual"
         :isActive="selectedManual?.id === manual.id"
-        @click="handleSelectManual(manual)"
+        @click="handleSelectManual(manual.id)"
       />
     </div>
   </div>
@@ -40,12 +42,24 @@ const availableManuals = computed(() => {
   return gameStore.getAvailableManuals
 })
 
-const handleSelectManual = (manual) => {
-  const current = gameStore.state.game.selectedManual
-  gameStore.state.game.selectedManual = current?.id === manual.id ? null : manual
+const handleSelectManual = (manualId) => {
+  const current = gameStore.state.game.selectedManualId
+  gameStore.state.game.selectedManualId = current === manualId ? null : manualId
 }
 
-const selectedManual = computed(() => gameStore.state.game.selectedManual)
+const selectedManual = computed(() => {
+  if (!gameStore.state.game.selectedManualId) return null
+  const {
+    def: actionDef,
+    state: actionState,
+    type,
+  } = gameStore.getActionById(gameStore.state.game.selectedManualId) || null
+  return {
+    ...actionDef,
+    ...actionState,
+    type,
+  }
+})
 </script>
 
 <style lang="scss" scoped>

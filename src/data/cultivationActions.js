@@ -6,9 +6,8 @@ export const cultivationActions = {
     tier: 0,
     description: '',
     base_progress_required: 100,
-    onSuccess: (gameState, helpers) => {
+    onComplete: (gameState, helpers) => {
       helpers.addStoryEntry(gameState, 'first_true_breath_end')
     },
-    onFail: () => {},
   },
 }

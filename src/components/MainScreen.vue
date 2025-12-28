@@ -12,7 +12,7 @@
           v-for="action in column"
           :key="action.id"
           :action="action"
-          @click="gameStore.handleActiveAction(action)"
+          @click="gameStore.handleActiveAction(action.id)"
           :isActive="gameStore.state.game.activeActions.includes(action.id)"
         >
           <template #details>

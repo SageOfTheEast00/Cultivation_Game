@@ -2,13 +2,12 @@ export const ActionDefinitions = {
   wake_up: {
     title: 'Wake Up',
     flavor: 'Where am I?',
-    visible_by_default: true,
     one_time: true,
     area: 'cave',
     base_progress_required: 40,
     onComplete: (gameState, helpers) => {
-      gameState.actions['get_golden_book'].is_visible = true
-      gameState.actions['get_mushroom'].is_visible = true
+      helpers.showAction(gameState, 'get_golden_book')
+      helpers.showAction(gameState, 'get_mushroom')
       helpers.addStoryEntry(gameState, 'wake_up_1')
     },
   },
@@ -19,8 +18,8 @@ export const ActionDefinitions = {
     area: 'cave',
     base_progress_required: 50,
     onComplete: (gameState, helpers) => {
-      gameState.actions['read_golden_book'].is_visible = true
-      gameState.actions['explore_cave'].is_visible = true
+      helpers.showAction(gameState, 'read_golden_book')
+      helpers.showAction(gameState, 'explore_cave')
       helpers.addStoryEntry(gameState, 'get_golden_book_1')
     },
   },
@@ -36,7 +35,7 @@ export const ActionDefinitions = {
       }
       if (old < 100 && current >= 100) {
         helpers.addStoryEntry(gameState, 'read_golden_book_1')
-        gameState.actions['study_sifting_sand_to_see_the_nature'].is_visible = true
+        helpers.showAction(gameState, 'study_sifting_sand_to_see_the_nature')
       }
     },
     onComplete: () => {},
@@ -66,7 +65,6 @@ export const ActionDefinitions = {
     base_progress_required: 50,
     is_continuous: true,
     one_time: true,
-    visible_by_default: true, // For testing purposes remove later
     onProgress: ({ gameState, current, old, helpers }) => {
       if (old == 0 && current >= 1) {
         helpers.addStoryEntry(gameState, 'study_sifting_sand_to_see_the_nature_start')

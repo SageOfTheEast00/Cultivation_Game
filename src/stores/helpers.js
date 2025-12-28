@@ -41,13 +41,16 @@ export const helpers = {
     console.log(`Added manual ${manualId} to knowledge.`)
   },
 
-  // New Action Managmet System
-
-  addAction: (gameState, actionId) => {
-    if (gameState.actions[actionId]) {
-      console.warn(`Action ${actionId} does not exist in game state.`)
-      return
+  showAction(gameState, actionId) {
+    if (!gameState.game.visibleActions.includes(actionId)) {
+      gameState.game.visibleActions.push(actionId)
     }
-    gameState.actions[actionId] = { id: actionId, progress: 0, is_visible: true }
+  },
+
+  hideAction(gameState, actionId) {
+    const index = gameState.game.visibleActions.indexOf(actionId)
+    if (index !== -1) {
+      gameState.game.visibleActions.splice(index, 1)
+    }
   },
 }
